@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Főállás mellett építettem AI ügynökséget – YouTube slide-ok v2 (emberi hang) | TD-AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&family=Montserrat:ital,wght@0,500;0,600;0,700;0,800;0,900;1,600&family=Playfair+Display:ital,wght@0,700;0,800;1,600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    :root {
+      --bg-black: #040404;
+      --bg-obsidian: #0a0805;
+      --bg-card: rgba(16, 13, 9, 0.86);
+      --bg-card-deep: rgba(10, 8, 5, 0.94);
+      --gold-pure: #ffd700;
+      --gold-bright: #f5d061;
+      --gold-champagne: #c5a059;
+      --gold-dark: #8a6621;
+      --gold-glow: rgba(245, 208, 97, 0.42);
+      --text-white: #ffffff;
+      --text-cream: #f5efe2;
+      --text-muted: rgba(230, 218, 195, 0.74);
+      --green-win: #10b981;
+      --red-loss: #ef4444;
+      --font-hormozi: "Montserrat", system-ui, sans-serif;
+      --font-luxury: "Cinzel", Georgia, serif;
+      --font-serif: "Playfair Display", Georgia, serif;
+      --font-mono: "JetBrains Mono", monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: var(--font-hormozi);
+      color: var(--text-white);
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ——— 16:9 MONITOR DECK CONTAINER ——— */
+    .deck-viewport {
+      width: 100vw;
+      height: 56.25vw;
+      max-height: 100vh;
+      max-width: 177.78vh;
+      position: relative; container-type: size;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 85% 65% at 50% 10%, rgba(197, 160, 89, 0.16), transparent 60%),
+        radial-gradient(ellipse 65% 55% at 85% 90%, rgba(255, 215, 0, 0.08), transparent 55%),
+        linear-gradient(180deg, #030303 0%, #0b0905 100%);
+      box-shadow: 0 0 100px rgba(0, 0, 0, 1);
+      perspective: 1500px;
+    }
+
+    /* ——— 3D WEBGL BACKGROUND ——— */
+    #webgl-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ——— GOLD GRID & VIGNETTE ——— */
+    .gold-grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(197, 160, 89, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(197, 160, 89, 0.045) 1px, transparent 1px);
+      background-size: 52px 52px;
+      mask-image: radial-gradient(ellipse 85% 75% at 50% 50%, #000 25%, transparent 90%);
+      -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 50%, #000 25%, transparent 90%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* ——— LUXURY GOLD FRAME ——— */
+    .luxury-frame {
+      position: absolute;
+      inset: 10px;
+      border: 1px solid rgba(197, 160, 89, 0.28);
+      border-radius: 10px;
+      pointer-events: none;
+      z-index: 20;
+      box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.75);
+    }
+
+    .corner-ornament {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      z-index: 21;
+      pointer-events: none;
+    }
+    .corner-ornament::before, .corner-ornament::after {
+      content: "";
+      position: absolute;
+      background: linear-gradient(90deg, var(--gold-pure), var(--gold-champagne));
+      box-shadow: 0 0 14px var(--gold-glow);
+    }
+    .corner-ornament::before { width: 100%; height: 2.5px; }
+    .corner-ornament::after { width: 2.5px; height: 100%; }
+    .corner-tl { top: 18px; left: 18px; }
+    .corner-tl::before, .corner-tl::after { top: 0; left: 0; }
+    .corner-tr { top: 18px; right: 18px; }
+    .corner-tr::before, .corner-tr::after { top: 0; right: 0; }
+    .corner-bl { bottom: 18px; left: 18px; }
+    .corner-bl::before, .corner-bl::after { bottom: 0; left: 0; }
+    .corner-br { bottom: 18px; right: 18px; }
+    .corner-br::before, .corner-br::after { bottom: 0; right: 0; }
+
+    /* ——— TOP BRAND HEADER WITH TD-AI LOGO ——— */
+    .top-bar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      height: clamp(50px, 6.6cqh, 68px);
+      padding: 0 2.6%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(245, 208, 97, 0.22);
+      background: linear-gradient(180deg, rgba(6, 5, 3, 0.94) 0%, rgba(10, 8, 5, 0.6) 100%);
+      backdrop-filter: blur(14px);
+      z-index: 25;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-coin-wrap {
+      position: relative;
+      width: clamp(36px, 4.4cqh, 48px);
+      height: clamp(36px, 4.4cqh, 48px);
+      border-radius: 50%;
+      padding: 2px;
+      background: conic-gradient(from 0deg, var(--gold-pure), var(--gold-dark), var(--gold-pure));
+      box-shadow: 0 0 22px rgba(245, 208, 97, 0.45);
+      animation: pulseGoldLogo 3s ease-in-out infinite;
+    }
+
+    @keyframes pulseGoldLogo {
+      0%, 100% { box-shadow: 0 0 18px rgba(245, 208, 97, 0.4); transform: scale(1); }
+      50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.75); transform: scale(1.05); }
+    }
+
+    .logo-coin-wrap img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      background: #000;
+    }
+
+    .brand-titles {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-name {
+      font-family: var(--font-luxury);
+      font-size: clamp(0.68rem, 1.08cqw, 0.96rem);
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      color: var(--gold-bright);
+      text-transform: uppercase;
+      text-shadow: 0 0 14px rgba(245, 208, 97, 0.35);
+    }
+
+    .brand-url {
+      font-family: var(--font-mono);
+      font-size: clamp(0.56rem, 0.78cqw, 0.74rem);
+      color: var(--text-cream);
+      letter-spacing: 0.08em;
+      opacity: 0.85;
+    }
+
+    .top-bar-center {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: linear-gradient(135deg, rgba(197, 160, 89, 0.16), rgba(0, 0, 0, 0.7));
+      border: 1px solid rgba(245, 208, 97, 0.38);
+      padding: 6px 16px;
+      border-radius: 999px;
+      box-shadow: 0 0 24px rgba(197, 160, 89, 0.15);
+    }
+
+    .rec-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--gold-pure);
+      box-shadow: 0 0 12px var(--gold-pure);
+      animation: blinkGold 1.5s infinite ease-in-out;
+    }
+
+    @keyframes blinkGold {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.8); }
+    }
+
+    .chapter-indicator {
+      font-family: var(--font-hormozi);
+      font-size: clamp(0.6rem, 0.82cqw, 0.78rem);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold-bright);
+      font-weight: 800;
+    }
+
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slide-pill-counter {
+      font-family: var(--font-mono);
+      font-size: clamp(0.7rem, 0.95cqw, 0.88rem);
+      font-weight: 800;
+      color: #000;
+      background: linear-gradient(135deg, var(--gold-pure), var(--gold-champagne));
+      padding: 4px 14px;
+      border-radius: 999px;
+      box-shadow: 0 0 18px rgba(245, 208, 97, 0.45);
+    }
+
+    /* ——— SLIDES STAGE ——— */
+    .slides-stage {
+      position: absolute;
+      top: calc(10px + clamp(50px, 6.6cqh, 68px));
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      z-index: 10;
+      perspective: 1500px;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 2% 4% 2.8% 4%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateZ(-140px) rotateX(7deg) scale(0.93);
+      transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+                  visibility 0.55s;
+      transform-style: preserve-3d;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateZ(0) rotateX(0deg) scale(1);
+      z-index: 5;
+    }
+
+    /* ——— AUTOMATIC SEQUENCED HORMOZI ANIMATIONS ——— */
+    .auto-anim {
+      opacity: 0;
+      transform: translateY(32px) scale(0.92) rotateX(-12deg);
+      filter: blur(6px);
+      transition:
+        opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+        filter 0.5s ease;
+      transition-delay: var(--delay, 0s);
+    }
+
+    .slide.active .auto-anim {
+      opacity: 1;
+      transform: translateY(0) scale(1) rotateX(0deg);
+      filter: blur(0px);
+    }
+
+    /* Pop-in from left/right variants */
+    .auto-anim.from-left {
+      transform: translateX(-45px) scale(0.94);
+    }
+    .slide.active .auto-anim.from-left {
+      transform: translateX(0) scale(1);
+    }
+
+    .auto-anim.from-right {
+      transform: translateX(45px) scale(0.94);
+    }
+    .slide.active .auto-anim.from-right {
+      transform: translateX(0) scale(1);
+    }
+
+    .auto-anim.scale-slam {
+      transform: scale(0.75) translateZ(-80px);
+    }
+    .slide.active .auto-anim.scale-slam {
+      transform: scale(1) translateZ(0);
+    }
+
+    /* ——— HORMOZI STYLE TYPOGRAPHY & MARKERS ——— */
+    .hormozi-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-hormozi);
+      font-size: clamp(0.62rem, 0.88cqw, 0.8rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #050505;
+      background: linear-gradient(135deg, var(--gold-pure), var(--gold-champagne));
+      padding: 5px 15px;
+      border-radius: 6px;
+      margin-bottom: 0.6rem;
+      width: max-content;
+      box-shadow: 0 6px 25px rgba(245, 208, 97, 0.4);
+    }
+
+    .hormozi-h1 {
+      font-family: var(--font-hormozi);
+      font-size: clamp(1.7rem, 3.35cqw, 3.05rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      margin-bottom: 0.6rem;
+      text-shadow: 0 8px 30px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Animated Gold Highlight Marker Box (Hormozi Signature) */
+    .gold-marker {
+      position: relative;
+      display: inline-block;
+      color: #050505;
+      padding: 0 10px;
+      margin: 0 2px;
+      z-index: 1;
+      font-weight: 900;
+    }
+
+    .gold-marker::before {
+      content: "";
+      position: absolute;
+      inset: 2px 0;
+      background: linear-gradient(135deg, var(--gold-pure) 0%, var(--gold-bright) 60%, var(--gold-champagne) 100%);
+      border-radius: 6px;
+      z-index: -1;
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+      transition-delay: calc(var(--delay, 0.2s) + 0.25s);
+      box-shadow: 0 0 28px rgba(255, 215, 0, 0.55);
+    }
+
+    .slide.active .gold-marker::before {
+      transform: scaleX(1);
+    }
+
+    .gold-text {
+      background: linear-gradient(135deg, #fff 0%, var(--gold-pure) 45%, var(--gold-champagne) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 20px rgba(245, 208, 97, 0.3));
+    }
+
+    .slide-lead {
+      font-size: clamp(0.84rem, 1.18cqw, 1.08rem);
+      font-weight: 500;
+      color: var(--text-cream);
+      line-height: 1.52;
+      max-width: 65ch;
+    }
+
+    /* ——— 3D GOLD CARDS WITH CONTINUOUS SHIMMER ——— */
+    .card-3d {
+      position: relative;
+      background: var(--bg-card);
+      border: 1.5px solid rgba(197, 160, 89, 0.36);
+      border-radius: 16px;
+      padding: clamp(0.85rem, 1.4cqw, 1.35rem);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 235, 180, 0.15);
+      transform-style: preserve-3d;
+      transition: transform 0.2s ease-out, border-color 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
+    }
+
+    /* Continuous moving gold sheen across cards */
+    .card-3d::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -120%;
+      width: 60%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.09), transparent);
+      transform: rotate(25deg);
+      animation: cardGoldSweep 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes cardGoldSweep {
+      0%, 60% { left: -120%; }
+      100% { left: 160%; }
+    }
+
+    .card-3d:hover {
+      border-color: var(--gold-pure);
+      box-shadow: 0 22px 55px rgba(0, 0, 0, 0.85), 0 0 35px rgba(245, 208, 97, 0.32);
+    }
+
+    /* Continuous Gentle 3D Float for Hero Images */
+    .float-3d {
+      animation: floatContinuous 4.5s ease-in-out infinite;
+    }
+
+    @keyframes floatContinuous {
+      0%, 100% { transform: translateY(0px) rotateY(-4deg) rotateX(2deg); }
+      50% { transform: translateY(-10px) rotateY(4deg) rotateX(-2deg); }
+    }
+
+    /* ——— IMAGE SHOWCASE FRAMES WITH TD-AI LOGO WATERMARK ——— */
+    .visual-showcase {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 2px solid var(--gold-bright);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.88), 0 0 40px rgba(197, 160, 89, 0.3);
+      background: #070604;
+    }
+
+    .visual-showcase img.main-visual {
+      width: 100%;
+      height: 100%;
+      max-height: clamp(220px, 38cqh, 360px);
+      object-fit: cover;
+      display: block;
+      transition: transform 0.6s ease;
+    }
+
+    .visual-showcase:hover img.main-visual {
+      transform: scale(1.04);
+    }
+
+    .visual-logo-stamp {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(5, 4, 3, 0.88);
+      border: 1px solid var(--gold-pure);
+      padding: 4px 10px 4px 5px;
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+      z-index: 3;
+    }
+
+    .visual-logo-stamp img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .visual-logo-stamp span {
+      font-family: var(--font-luxury);
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: var(--gold-pure);
+      letter-spacing: 0.12em;
+    }
+
+    .visual-caption-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 14px;
+      background: linear-gradient(0deg, rgba(4, 3, 2, 0.96) 0%, rgba(4, 3, 2, 0.7) 75%, transparent 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--gold-bright);
+    }
+
+    /* ——— LAYOUT GRIDS ——— */
+    .split-2 {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: clamp(1.2rem, 2.3cqw, 2.2rem);
+      align-items: center;
+      width: 100%;
+    }
+
+    .split-reverse {
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: clamp(1.2rem, 2.3cqw, 2.2rem);
+      align-items: center;
+      width: 100%;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(0.85rem, 1.4cqw, 1.35rem);
+      width: 100%;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(0.75rem, 1.15cqw, 1.1rem);
+      width: 100%;
+    }
+
+    /* ——— STAT NUMBERS ——— */
+    .stat-mega {
+      font-family: var(--font-hormozi);
+      font-size: clamp(2.1rem, 4.4cqw, 4.1rem);
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(135deg, #ffffff 10%, var(--gold-pure) 55%, var(--gold-champagne) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 4px 24px rgba(255, 215, 0, 0.4));
+    }
+
+    .stat-mid {
+      font-family: var(--font-hormozi);
+      font-size: clamp(1.35rem, 2.3cqw, 2.15rem);
+      font-weight: 900;
+      color: var(--gold-pure);
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      font-family: var(--font-hormozi);
+      font-size: clamp(0.6rem, 0.78cqw, 0.75rem);
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    /* ——— ANIMATED PROGRESS & COST BARS ——— */
+    .bar-row {
+      margin-bottom: 0.52rem;
+      background: rgba(255, 215, 0, 0.04);
+      border: 1px solid rgba(197, 160, 89, 0.25);
+      border-radius: 10px;
+      padding: 0.5rem 0.85rem;
+    }
+
+    .bar-row-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: clamp(0.76rem, 0.98cqw, 0.9rem);
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .bar-track {
+      width: 100%;
+      height: 7px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold-pure), #fff);
+      box-shadow: 0 0 14px var(--gold-pure);
+      transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition-delay: calc(var(--delay, 0.3s) + 0.3s);
+    }
+
+    .slide.active .bar-fill {
+      width: var(--target-w, 100%);
+    }
+
+    /* ——— ANIMATED 3D REVENUE CHART (SLIDE 9) ——— */
+    .chart-stage {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      align-items: end;
+      height: clamp(165px, 25cqh, 235px);
+      padding: 1rem 1rem 0.3rem 1rem;
+      border-bottom: 2px solid var(--gold-bright);
+    }
+
+    .chart-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+    }
+
+    .chart-pillar {
+      width: 74%;
+      height: 0%;
+      border-radius: 10px 10px 2px 2px;
+      background: linear-gradient(180deg, #fff 0%, var(--gold-pure) 25%, var(--gold-champagne) 70%, var(--gold-dark) 100%);
+      border: 1.5px solid #fff;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.45);
+      transition: height 1.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition-delay: var(--bar-delay, 0.4s);
+    }
+
+    .slide.active .chart-pillar {
+      height: var(--target-h, 50%);
+    }
+
+    /* ——— ANIMATED SVG ARROWS (HORMOZI DRAW EFFECT) ——— */
+    .hormozi-arrow-svg path {
+      stroke-dasharray: 300;
+      stroke-dashoffset: 300;
+      transition: stroke-dashoffset 1s ease-out;
+      transition-delay: 0.75s;
+    }
+    .slide.active .hormozi-arrow-svg path {
+      stroke-dashoffset: 0;
+    }
+
+    /* ——— AUTO-HIDING BOTTOM BAR (INVISIBLE DURING RECORDING!) ——— */
+    .control-bar {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 16px;
+      background: rgba(8, 7, 5, 0.94);
+      border: 1px solid var(--gold-bright);
+      border-radius: 999px;
+      backdrop-filter: blur(16px);
+      z-index: 150;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .control-bar.auto-hidden,
+    body.clean-obs-mode .control-bar {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%) translateY(24px);
+    }
+
+    .ctrl-btn {
+      background: rgba(245, 208, 97, 0.08);
+      border: 1px solid rgba(245, 208, 97, 0.35);
+      color: var(--text-cream);
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-family: var(--font-hormozi);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .ctrl-btn:hover, .ctrl-btn.active {
+      background: linear-gradient(135deg, var(--gold-pure), var(--gold-champagne));
+      border-color: #fff;
+      color: #050505;
+      box-shadow: 0 0 18px rgba(255, 215, 0, 0.5);
+    }
+
+    /* ——— LASER POINTER ——— */
+    #laser-dot {
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff 20%, var(--gold-pure) 55%, transparent 80%);
+      box-shadow: 0 0 28px 8px rgba(255, 215, 0, 0.9), 0 0 65px 18px rgba(197, 160, 89, 0.55);
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      display: none;
+    }
+    body.laser-active { cursor: none; }
+    body.laser-active #laser-dot { display: block; }
+
+    /* ——— WEBCAM PIP ——— */
+    .webcam-pip {
+      position: fixed;
+      bottom: 66px;
+      right: 30px;
+      width: clamp(155px, 15.5cqw, 225px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 3px solid var(--gold-pure);
+      background: radial-gradient(circle, #1c160c 0%, #070604 100%);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.9), 0 0 35px rgba(255, 215, 0, 0.45);
+      z-index: 110;
+      overflow: hidden;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+    }
+    .webcam-pip.open { display: flex; }
+    .webcam-pip video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  
+/* ===== V2: NAGYOBB, EMBERIBB, HORMOZI-FELIRAT STÍLUS ===== */
+.hormozi-h1{font-size:clamp(1.9rem,4.6cqw,7.6rem);line-height:1.08;letter-spacing:-0.015em;-webkit-text-stroke:0.085em #000;paint-order:stroke fill;text-shadow:0 0.07em 0 #000,0 0.14em 0.5em rgba(0,0,0,.9);margin-bottom:0.5rem;}
+.hormozi-h1.h-sm{font-size:clamp(1.6rem,3.7cqw,6.2rem);}
+.hormozi-h1 .gold-marker{-webkit-text-stroke:0;text-shadow:none;transform:rotate(-1.5deg);padding:0 0.18em;}
+.hormozi-h1 .gold-marker::before{inset:0.04em 0;border-radius:0.12em;box-shadow:0 0.09em 0 #000,0 0 28px rgba(255,215,0,.55);}
+.hy{color:#ffd700}.hg{color:#22e584}.hr{color:#ff4d4d}
+.hormozi-badge{font-size:clamp(0.7rem,1.05cqw,1.8rem);transform:rotate(-1deg);}
+.talk{font-size:clamp(0.95rem,1.8cqw,3rem);font-weight:600;color:#fff;line-height:1.35;border-left:0.25em solid var(--gold-pure);padding-left:0.7em;margin:0.5rem 0 0.2rem;}
+.talk b{font-weight:900;color:var(--gold-pure)}
+.stack{display:flex;flex-direction:column;gap:clamp(0.5rem,0.85cqw,1.4rem);margin-top:0.8rem;}
+.big-card{display:flex;align-items:center;gap:1em;padding:clamp(0.6rem,1cqw,1.7rem) clamp(0.8rem,1.3cqw,2.2rem);}
+.bc-ic{font-size:clamp(1.3rem,2.2cqw,3.7rem);line-height:1;}
+.bc-big{font-size:clamp(0.92rem,1.7cqw,2.9rem);font-weight:900;color:#fff;line-height:1.2;}
+.bc-sm{font-size:clamp(0.76rem,1.28cqw,2.2rem);font-weight:500;color:var(--text-muted);line-height:1.35;margin-top:0.15em;}
+.bc-sm b{color:#fff}.bc-sm b.hy{color:#ffd700}.bc-sm b.hg{color:#22e584}.bc-sm s{color:var(--red-loss)}
+.q-card{display:flex;align-items:center;gap:0.8em;font-size:clamp(1rem,1.7cqw,2.9rem);font-weight:800;line-height:1.25;color:#fff;padding:clamp(0.8rem,1.3cqw,2.2rem) clamp(0.9rem,1.5cqw,2.5rem);}
+.quote{font-family:var(--font-hormozi);font-size:clamp(1.2rem,2.3cqw,3.9rem);font-weight:900;font-style:italic;color:#fff;line-height:1.25;text-transform:uppercase;}
+.sub-pill{background:linear-gradient(135deg,var(--gold-pure),var(--gold-champagne));color:#050505;font-size:clamp(1rem,1.5cqw,2.5rem);font-weight:900;padding:0.6em 1.5em;border-radius:999px;display:inline-block;box-shadow:0 0 30px rgba(255,215,0,.55);animation:pulseGoldLogo 2s ease-in-out infinite;}
+.mini{background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);border-radius:10px;padding:0.5rem;}
+.mini b{display:block;font-weight:900;color:var(--gold-pure);font-size:clamp(0.9rem,1.3cqw,2.2rem);}
+.mini span{font-size:clamp(0.6rem,0.8cqw,1.35rem);text-transform:uppercase;color:var(--text-muted);font-weight:700;}
+.stat-label{font-size:clamp(0.62rem,1cqw,1.7rem);}
+.bar-row-head{font-size:clamp(0.8rem,1.2cqw,2rem);}
+.visual-caption-bar{font-size:clamp(0.72rem,0.95cqw,1.6rem);}
+.daybar{display:flex;width:100%;height:clamp(54px,6cqw,160px);border-radius:12px;overflow:hidden;border:2px solid var(--gold-bright);margin:0.9rem 0;box-shadow:0 10px 30px rgba(0,0,0,.8);}
+.daybar>div{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:clamp(0.68rem,1.1cqw,1.9rem);font-weight:900;}
+.daybar small{font-weight:700;opacity:.85}
+.stat-mid{font-size:clamp(1.2rem,1.75cqw,3rem);white-space:nowrap;}
+.gold-marker{white-space:nowrap;}
+.grid-3>.card-3d{padding-left:0.4rem;padding-right:0.4rem;}
+
+.slide{overflow:visible;}
+.slide>div{transform-origin:center center;}
+</style>
+</head>
+<body>
+
+<div id="laser-dot"></div>
+
+<div class="deck-viewport" id="deckViewport">
+  <canvas id="webgl-canvas"></canvas>
+  <div class="gold-grid-overlay"></div>
+
+  <div class="luxury-frame"></div>
+  <div class="corner-ornament corner-tl"></div>
+  <div class="corner-ornament corner-tr"></div>
+  <div class="corner-ornament corner-bl"></div>
+  <div class="corner-ornament corner-br"></div>
+
+  <!-- ================= HEADER WITH TD-AI LOGO ================= -->
+  <header class="top-bar">
+    <div class="brand-cluster">
+      <div class="logo-coin-wrap">
+        <img src="public/assets/logo_circular.png" onerror="this.src='site-2/assets/td-logo-medallion.png'" alt="TD-AI Logo" />
+      </div>
+      <div class="brand-titles">
+        <span class="brand-name">TD-AI &amp; Marketing Ügynökség</span>
+        <span class="brand-url">TDAIMARKETING.HU · TÓTH DÁNIEL ISTVÁN</span>
+      </div>
+    </div>
+
+    <div class="top-bar-center">
+      <span class="rec-dot"></span>
+      <span class="chapter-indicator" id="chapterTitle">01 · FŐÁLLÁS MELLETT AI ÜGYNÖKSÉG</span>
+    </div>
+
+    <div class="top-bar-right">
+      <span class="slide-pill-counter" id="slideCounterBadge">01 / 12</span>
+    </div>
+  </header>
+
+  <!-- ================= 12 HORMOZI × GOLD SLIDES ================= -->
+  <main class="slides-stage" id="slidesStage">
+    <section class="slide active" data-slide="1" data-chapter="01 · AZ ÉN SZTORIM · KAMU NÉLKÜL">
+  <div class="split-2"><div>
+    <div class="hormozi-badge auto-anim" style="--delay:0.05s;">🔥 Őszinte sztori · nulla kamu</div>
+    <h2 class="hormozi-h1  auto-anim" style="--delay:0.18s;">Nappal <span class="hr">meló.</span><br />Este <span class="gold-marker" style="--delay:0.28s;">saját cég.</span><br />Így építettem <span class="hy">AI ügynökséget.</span></h2>
+    <p class="talk auto-anim" style="--delay:0.4s;">Nem vagyok guru. A kamera előtt is kezdő vagyok.<br />De minden szám <b>valódi</b>, amit ma mutatok.</p>
+    <div class="grid-3 auto-anim" style="--delay:0.6s;margin-top:0.9rem;">
+      <div class="card-3d" style="text-align:center;"><div class="stat-mid" data-count="0" data-suffix=" Ft">0 Ft</div><div class="stat-label" style="">Ennyi tőkém volt</div></div>
+      <div class="card-3d" style="text-align:center;"><div class="stat-mid" data-count="25000" data-prefix="~" data-suffix=" Ft">~25.000 Ft</div><div class="stat-label" style="">Ennyibe került havonta</div></div>
+      <div class="card-3d" style="text-align:center;border-color:var(--gold-pure);"><div class="stat-mid" data-count="1000000" data-prefix="~" data-suffix=" Ft">~1.000.000 Ft</div><div class="stat-label" style="color:var(--gold-pure);">Ennyi jött be ~4 hónap alatt</div></div>
+    </div>
+  </div>
+  <div class="auto-anim from-right" style="--delay:0.35s;"><div class="visual-showcase float-3d">
+      <div class="visual-logo-stamp"><img src="public/assets/logo_circular.png" alt="TD-AI" /><span>ESTE 6 UTÁN</span></div>
+      <img class="main-visual" src="public/assets/slide_night_hustle_gold.jpg" onerror="this.onerror=null;this.src='public/assets/slide_night_hustle_gold.jpg'" alt="ESTE 6 UTÁN" /><div class="visual-caption-bar"><span>🌙 Amikor más pihen, nekem akkor kezdődik a második műszak</span><span></span></div></div></div>
+  </div>
+    </section>
+    <section class="slide" data-slide="2" data-chapter="02 · KI BESZÉL HOZZÁD?">
+  <div class="split-reverse">
+    <div class="auto-anim from-left" style="--delay:0.15s;">
+      <div class="card-3d float-3d" style="text-align:center;padding:1.4rem;border-color:var(--gold-pure);">
+        <div style="position:relative;width:clamp(150px,17cqw,330px);height:clamp(150px,17cqw,330px);margin:0 auto 0.8rem auto;border-radius:50%;padding:4px;background:conic-gradient(from 0deg,var(--gold-pure),var(--gold-dark),var(--gold-pure));box-shadow:0 0 38px rgba(245,208,97,0.45);">
+          <img src="site-2/assets/toth-daniel-profile.png" onerror="this.onerror=null;this.src='public/assets/logo_circular.png'" alt="Dani" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:center 12%;" />
+          <img src="public/assets/logo_circular.png" alt="TD-AI" style="position:absolute;bottom:2px;right:2px;width:22%;height:22%;border-radius:50%;border:2px solid var(--gold-pure);box-shadow:0 4px 15px #000;" />
+        </div>
+        <div class="bc-big" style="color:var(--gold-pure);font-size:clamp(1.2rem,2cqw,2.2rem);">DANI</div>
+        <div class="bc-sm">26 éves · Debrecen</div>
+        <div class="grid-3" style="margin-top:1rem;gap:0.55rem;">
+          <div class="mini"><b data-count="9" data-suffix=" év">9 év</b><span>főállásban</span></div>
+          <div class="mini"><b style="color:#fff;">8–10 óra</b><span>munka naponta</span></div>
+          <div class="mini"><b style="color:var(--green-win);">2026. 03.</b><span>belevágtam</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="hormozi-badge auto-anim" style="--delay:0.05s;">👋 Szia, Dani vagyok</div>
+      <h2 class="hormozi-h1  auto-anim" style="--delay:0.18s;">Nem mondtam fel.<br /><span class="gold-marker" style="--delay:0.28s;">Mellette</span> építettem.</h2>
+      <p class="talk auto-anim" style="--delay:0.4s;">Ugyanúgy bejárok dolgozni, mint te.<br />Csak este nem a tévé elé ülök le.</p>
+      <div class="stack">
+        <div class="card-3d big-card auto-anim" style="--delay:0.55s;"><div class="bc-ic">💼</div><div><div class="bc-big">A fizetésem fizette a számláimat.</div><div class="bc-sm">Így nem kellett kapkodnom, és nem kellett hitel.</div></div></div>
+        <div class="card-3d big-card auto-anim" style="--delay:0.72s;"><div class="bc-ic">⚡</div><div><div class="bc-big">2026 márciusában azt mondtam: elég a tervezgetésből.</div></div></div>
+        <div class="card-3d big-card auto-anim" style="--delay:0.89s;border-color:var(--gold-pure);"><div class="bc-ic">🎯</div><div><div class="bc-big">Egy dolgot adok el: több megkeresést a kisvállalkozásoknak.</div><div class="bc-sm">Nem lájkot. Telefonhívást.</div></div></div>
+      </div>
+    </div>
+  </div>
+    </section>
+    <section class="slide" data-slide="3" data-chapter="03 · MENNYI PÉNZ KELL HOZZÁ?">
+  <div class="split-2"><div>
+    <div class="hormozi-badge auto-anim" style="--delay:0.05s;">💰 Mutatom fillérre</div>
+    <h2 class="hormozi-h1 h-sm auto-anim" style="--delay:0.18s;">Azt hiszed, <span class="hr">milliók</span> kellenek?<br />Nekem <span class="gold-marker" style="--delay:0.28s;">~25 ezer Ft</span> volt havonta.</h2>
+    <p class="talk auto-anim" style="--delay:0.4s;">Egy laptop, ami már amúgy is megvolt. Ennyi volt az „irodám”.</p>
+    <div class="auto-anim" style="--delay:0.5s;margin-top:0.6rem;">
+      <div class="bar-row"><div class="bar-row-head"><span>💻 Laptop (megvolt)</span><span style="color:var(--green-win);font-family:var(--font-mono);">0 Ft</span></div><div class="bar-track"><div class="bar-fill" style="--target-w:100%;--delay:0.5s;"></div></div></div>
+      <div class="bar-row"><div class="bar-row-head"><span>🤖 AI eszközök (Cursor, Claude)</span><span style="color:var(--gold-pure);font-family:var(--font-mono);">~12.000 Ft / hó</span></div><div class="bar-track"><div class="bar-fill" style="--target-w:52%;--delay:0.62s;"></div></div></div>
+      <div class="bar-row"><div class="bar-row-head"><span>🌐 Domain + tárhely</span><span style="color:var(--gold-pure);font-family:var(--font-mono);">~5.000 Ft / hó</span></div><div class="bar-track"><div class="bar-fill" style="--target-w:26%;--delay:0.74s;"></div></div></div>
+      <div class="bar-row"><div class="bar-row-head"><span>⚙️ Egyéb szoftverek</span><span style="color:var(--gold-pure);font-family:var(--font-mono);">~4.500 Ft / hó</span></div><div class="bar-track"><div class="bar-fill" style="--target-w:22%;--delay:0.86s;"></div></div></div>
+      <div class="bar-row"><div class="bar-row-head"><span>📧 Céges e-mail</span><span style="color:var(--gold-pure);font-family:var(--font-mono);">~3.500 Ft / hó</span></div><div class="bar-track"><div class="bar-fill" style="--target-w:18%;--delay:0.98s;"></div></div></div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0.85rem;">
+    <div class="auto-anim from-right" style="--delay:0.35s;"><div class="visual-showcase float-3d">
+      <div class="visual-logo-stamp"><img src="public/assets/logo_circular.png" alt="TD-AI" /><span>1 LAPTOP</span></div>
+      <img class="main-visual" src="public/assets/slide_laptop_startup_1781860338979.png" onerror="this.onerror=null;this.src='public/assets/slide_night_hustle_gold.jpg'" alt="1 LAPTOP" style="max-height:24cqh;" /><div class="visual-caption-bar"><span>ÖSSZESEN:</span><span><b style="font-size:1.2em;color:var(--gold-pure);">~25.000 Ft / hó</b></span></div></div></div>
+    <div class="grid-3 auto-anim" style="--delay:0.75s;grid-template-columns:1fr 1fr;">
+      <div class="card-3d" style="border-left:5px solid var(--red-loss);"><div class="bc-sm" style="color:var(--red-loss);font-weight:900;">❌ BOLT, IRODA, KÉSZLET</div><div class="bc-big">2–5 millió Ft</div></div>
+      <div class="card-3d" style="border-left:5px solid var(--green-win);"><div class="bc-sm" style="color:var(--green-win);font-weight:900;">✅ ÉN ÍGY INDULTAM</div><div class="bc-big hy">25 ezer Ft / hó</div></div>
+    </div>
+    <p class="talk auto-anim" style="--delay:0.9s;">Az első ügyfelem <b class="hy">fél évnyi</b> költséget kifizetett.</p>
+  </div></div>
+    </section>
+    <section class="slide" data-slide="4" data-chapter="04 · MIT CSINÁLOK PONTOSAN?">
+  <div class="split-reverse">
+    <div class="auto-anim from-left" style="--delay:0.2s;"><div class="visual-showcase float-3d">
+      <div class="visual-logo-stamp"><img src="public/assets/logo_circular.png" alt="TD-AI" /><span>TDAIMARKETING.HU</span></div>
+      <img class="main-visual" src="site-2/assets/szolgaltatasok-hero-2x.webp" onerror="this.onerror=null;this.src='public/assets/slide_night_hustle_gold.jpg'" alt="TDAIMARKETING.HU" style="max-height:42cqh;" /><div class="visual-caption-bar"><span>🌐 Ezt mind egyedül raktam össze, esténként</span><span></span></div></div></div>
+    <div>
+      <div class="hormozi-badge auto-anim" style="--delay:0.05s;">🤝 Egyszerűen elmondva</div>
+      <h2 class="hormozi-h1  auto-anim" style="--delay:0.18s;">Nem posztokat gyártok.<br /><span class="gold-marker" style="--delay:0.28s;">Ügyfelet hozok.</span></h2>
+      <p class="talk auto-anim" style="--delay:0.4s;">Egy szerelőnek, egy fodrásznak, egy kivitelezőnek nem lájk kell.<br />Hanem hogy <b>csörögjön a telefon</b>.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.8rem;">
+        <div class="card-3d auto-anim" style="--delay:0.5s;"><div class="bc-ic">📣</div><div class="bc-big" style="color:var(--gold-pure);margin-top:0.2rem;">Hirdetés</div><div class="bc-sm">Google és Facebook: ott, ahol épp keresnek.</div></div>
+        <div class="card-3d auto-anim" style="--delay:0.62s;"><div class="bc-ic">💻</div><div class="bc-big" style="color:#fff;margin-top:0.2rem;">Weboldal</div><div class="bc-sm">Ami nem csak szép, hanem ajánlatkérést hoz.</div></div>
+        <div class="card-3d auto-anim" style="--delay:0.74s;"><div class="bc-ic">🤖</div><div class="bc-big" style="color:var(--gold-pure);margin-top:0.2rem;">AI chatbot</div><div class="bc-sm">Éjjel is válaszol helyetted.</div></div>
+        <div class="card-3d auto-anim" style="--delay:0.86s;"><div class="bc-ic">🔄</div><div class="bc-big" style="color:var(--green-win);margin-top:0.2rem;">Automatizálás</div><div class="bc-sm">Hogy egy érdeklődő se vesszen el.</div></div>
+      </div>
+    </div>
+  </div>
+    </section>
+    <section class="slide" data-slide="5" data-chapter="05 · AZ ELSŐ ÜGYFÉL · EZT SOSEM FELEJTEM EL">
+  <div class="split-2"><div>
+    <div class="hormozi-badge auto-anim" style="--delay:0.05s;">🎯 0 Ft hirdetésből</div>
+    <h2 class="hormozi-h1 h-sm auto-anim" style="--delay:0.18s;">Az első ügyfelem<br />a <span class="gold-marker" style="--delay:0.28s;">Facebookról</span> jött.</h2>
+    <p class="talk auto-anim" style="--delay:0.4s;">Valaki weboldalast keresett. Harmincan beírták: „írj rám”.<br />Én leírtam neki, <b>mit csinálnék a helyében</b>.</p>
+    <div class="stack">
+      <div class="card-3d big-card auto-anim" style="--delay:0.55s;"><div class="bc-ic">😅</div><div><div class="bc-big">Alig volt kész bármim.</div><div class="bc-sm">Se rendes weboldal, se referencia. Mégis aláírtuk.</div></div></div>
+      <div class="card-3d big-card auto-anim" style="--delay:0.72s;border-color:var(--green-win);"><div class="bc-ic">🤝</div><div><div class="bc-big">A mai napig velem dolgozik.</div></div></div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0.85rem;">
+    <div class="auto-anim from-right" style="--delay:0.3s;"><div class="visual-showcase float-3d">
+      <div class="visual-logo-stamp"><img src="public/assets/logo_circular.png" alt="TD-AI" /><span>1. ÜGYFÉL</span></div>
+      <img class="main-visual" src="public/assets/slide_first_client_1781860372238.png" onerror="this.onerror=null;this.src='public/assets/slide_1m_breakthrough_gold.jpg'" alt="1. ÜGYFÉL" style="max-height:24cqh;" /></div></div>
+    <div class="card-3d auto-anim scale-slam" style="--delay:0.6s;text-align:center;border:2px solid var(--gold-pure);">
+      <div class="stat-label" style="color:var(--gold-pure);">Az első 3 hétben</div>
+      <div class="stat-mega" data-count="150000" data-prefix="~" data-suffix=" Ft">~150.000 Ft</div>
+      <div class="bc-sm" style="margin-top:0.35rem;">Nem sok. De akkor hittem el, hogy <b style="color:#fff;">ez tényleg működhet</b>.</div>
+    </div>
+  </div></div>
+    </section>
+    <section class="slide" data-slide="6" data-chapter="06 · HOGYAN LETT TÖBB ÜGYFÉL?">
+  <div>
+    <div class="split-2" style="margin-bottom:0.9rem;"><div>
+      <div class="hormozi-badge auto-anim" style="--delay:0.05s;">🚀 Ez változtatott meg mindent</div>
+      <h2 class="hormozi-h1 h-sm auto-anim" style="--delay:0.18s;">Amíg én <span class="hr">dolgoztam,</span><br />a hirdetésem <span class="gold-marker" style="--delay:0.28s;">ügyfelet keresett.</span></h2>
+      <p class="talk auto-anim" style="--delay:0.4s;">Délután 5-kor kiléptem a kapun, és <b>volt kit visszahívnom</b>.</p>
+    </div>
+    <div class="auto-anim from-right" style="--delay:0.28s;"><div class="visual-showcase float-3d">
+      <div class="visual-logo-stamp"><img src="public/assets/logo_circular.png" alt="TD-AI" /><span>FACEBOOK HIRDETÉS</span></div>
+      <img class="main-visual" src="public/assets/slide_facebook_ads_1781860350699.png" onerror="this.onerror=null;this.src='public/assets/slide_night_hustle_gold.jpg'" alt="FACEBOOK HIRDETÉS" style="max-height:22cqh;" /></div></div>
+    </div>
+    <div class="grid-4">
+      <div class="card-3d auto-anim" style="--delay:0.5s;text-align:center;"><div class="stat-label" style="color:var(--gold-pure);">1.</div><div class="bc-ic" style="margin:0.25rem 0;">📣</div><div class="bc-big" style="color:#fff;">Hirdetés</div><div class="bc-sm">Cégvezetőknek, egy konkrét problémára.</div></div>
+      <div class="card-3d auto-anim" style="--delay:0.66s;text-align:center;"><div class="stat-label" style="color:var(--gold-pure);">2.</div><div class="bc-ic" style="margin:0.25rem 0;">📝</div><div class="bc-big" style="color:#fff;">Űrlap</div><div class="bc-sm">Név, telefonszám. 30 másodperc.</div></div>
+      <div class="card-3d auto-anim" style="--delay:0.82s;text-align:center;border-color:var(--gold-pure);"><div class="stat-label" style="color:var(--gold-pure);">3.</div><div class="bc-ic" style="margin:0.25rem 0;">🔥</div><div class="bc-big" style="color:var(--gold-pure);">6–7 érdeklődő</div><div class="bc-sm">Egyetlen hét alatt.</div></div>
+      <div class="card-3d auto-anim" style="--delay:0.98s;text-align:center;border-color:var(--green-win);"><div class="stat-label" style="color:var(--gold-pure);">4.</div><div class="bc-ic" style="margin:0.25rem 0;">🤝</div><div class="bc-big" style="color:var(--green-win);">Új szerződések</div><div class="bc-sm">A munka utáni hívásokból.</div></div>
+    </div>
+  </div>
+    </section>
+    <section class="slide" data-slide="7" data-chapter="07 · A VALÓSÁG · EZT NEM SZOKTÁK ELMONDANI">
+  <div class="split-2"><div>
+    <div class="hormozi-badge auto-anim" style="--delay:0.05s;">⏱️ Az ára</div>
+    <h2 class="hormozi-h1  auto-anim" style="--delay:0.18s;">Nem fogok hazudni:<br /><span class="gold-marker" style="--delay:0.28s;">kemény volt.</span></h2>
+    <p class="talk auto-anim" style="--delay:0.4s;">Este 6-tól sokszor éjfélig. 5–6 óra alvás.<br />Volt, hogy este 9-kor <b>csak bámultam a képernyőt</b>.</p>
+    <div class="auto-anim daybar" style="--delay:0.55s;">
+      <div style="flex:5.5;background:#121216;color:#999;"><span>🌙 ALVÁS</span><small>5–6 óra</small></div>
+      <div style="flex:9.5;background:#26231d;color:#ddd;border-left:1px solid rgba(255,255,255,0.15);"><span>💼 FŐÁLLÁS</span><small>8–10 óra</small></div>
+      <div style="flex:9;background:linear-gradient(135deg,var(--gold-pure),var(--gold-champagne));color:#050505;border-left:2px solid #fff;"><span>🚀 A SAJÁT CÉGEM</span><small>este 6 – éjfél</small></div>
+    </div>
+    <div class="grid-3 auto-anim" style="--delay:0.75s;">
+      <div class="card-3d" style="text-align:center;"><div class="stat-mid" >14–16 óra</div><div class="stat-label" style="">munka egy nap</div></div>
+      <div class="card-3d" style="text-align:center;"><div class="stat-mid" >5–6 óra</div><div class="stat-label" style="">alvás</div></div>
+      <div class="card-3d" style="text-align:center;border-color:var(--gold-pure);"><div class="stat-mid" >Megérte?</div><div class="stat-label" style="color:var(--gold-pure);">Igen. De nem volt könnyű.</div></div>
+    </div>
+  </div>
+  <div class="auto-anim from-right" style="--delay:0.35s;"><div class="visual-showcase float-3d">
+      <div class="visual-logo-stamp"><img src="public/assets/logo_circular.png" alt="TD-AI" /><span>EGY NAPOM</span></div>
+      <img class="main-visual" src="public/assets/slide_daily_routine_1781860384434.png" onerror="this.onerror=null;this.src='public/assets/slide_night_hustle_gold.jpg'" alt="EGY NAPOM" /><div class="visual-caption-bar"><span>⚡ Nappal munkahely, este a saját cégem</span><span>Debrecen</span></div></div></div>
+  </div>
+    </section>
+    <section class="slide" data-slide="8" data-chapter="08 · HOGY BÍROM EGYEDÜL?">
+  <div class="split-reverse">
+    <div class="auto-anim from-left" style="--delay:0.2s;"><div class="visual-showcase float-3d">
+      <div class="visual-logo-stamp"><img src="public/assets/logo_circular.png" alt="TD-AI" /><span>AZ ÉN CSAPATOM</span></div>
+      <img class="main-visual" src="public/assets/slide_ai_multiplier_gold.jpg" onerror="this.onerror=null;this.src='public/assets/slide_night_hustle_gold.jpg'" alt="AZ ÉN CSAPATOM" /><div class="visual-caption-bar"><span>🧠 A döntés az enyém. A gyorsaság az AI-é.</span><span></span></div></div></div>
+    <div>
+      <div class="hormozi-badge auto-anim" style="--delay:0.05s;">🤖 A „titkom”</div>
+      <h2 class="hormozi-h1  auto-anim" style="--delay:0.18s;">Egyedül vagyok.<br />De <span class="gold-marker" style="--delay:0.28s;">nem egyedül</span> dolgozom.</h2>
+      <p class="talk auto-anim" style="--delay:0.4s;">Az AI nem gondolkodik helyettem.<br />Csak <b>sokkal gyorsabban</b> megcsinálja, amit kitaláltam.</p>
+      <div class="stack">
+        <div class="card-3d big-card auto-anim" style="--delay:0.55s;"><div class="bc-ic">💻</div><div><div class="bc-big">Egy weboldal</div><div class="bc-sm">Régen: <s>3–4 hét</s> → <b class="hy">Ma: 2–3 este</b></div></div></div>
+        <div class="card-3d big-card auto-anim" style="--delay:0.72s;"><div class="bc-ic">📣</div><div><div class="bc-big">Kampány, szöveg, audit</div><div class="bc-sm">Régen: <s>2–3 nap</s> → <b class="hy">Ma: 45 perc</b></div></div></div>
+        <div class="card-3d big-card auto-anim" style="--delay:0.89s;border-color:var(--gold-pure);"><div class="bc-ic">💬</div><div><div class="bc-big">Chatbot az oldalamon</div><div class="bc-sm">Amíg én melózom, <b class="hy">ő válaszol az érdeklődőknek</b></div></div></div>
+      </div>
+    </div>
+  </div>
+    </section>
+    <section class="slide" data-slide="9" data-chapter="09 · A SZÁMOK · SZÉPÍTÉS NÉLKÜL">
+  <div class="split-2"><div>
+    <div class="hormozi-badge auto-anim" style="--delay:0.05s;">💰 ~4 hónap után</div>
+    <h2 class="hormozi-h1 h-sm auto-anim" style="--delay:0.18s;">Nulláról <span class="gold-marker" style="--delay:0.28s;">~1 millió Ft.</span><br />Estékből és hétvégékből.</h2>
+    <div class="card-3d auto-anim" style="--delay:0.38s;margin-top:0.7rem;padding:1rem;">
+      <div class="chart-stage">
+        <div class="chart-col"><div class="bc-sm" style="font-weight:900;color:var(--gold-bright);margin-bottom:6px;white-space:nowrap;">~150e Ft</div><div class="chart-pillar" style="--target-h:25%;--bar-delay:0.45s;"></div><div class="stat-label" style="color:var(--text-muted);">MÁRCIUS</div></div><div class="chart-col"><div class="bc-sm" style="font-weight:900;color:var(--gold-bright);margin-bottom:6px;white-space:nowrap;">~400e Ft</div><div class="chart-pillar" style="--target-h:48%;--bar-delay:0.65s;"></div><div class="stat-label" style="color:var(--text-muted);">ÁPRILIS</div></div><div class="chart-col"><div class="bc-sm" style="font-weight:900;color:var(--gold-bright);margin-bottom:6px;white-space:nowrap;">~700e Ft</div><div class="chart-pillar" style="--target-h:72%;--bar-delay:0.85s;"></div><div class="stat-label" style="color:var(--text-muted);">MÁJUS</div></div><div class="chart-col"><div class="bc-sm" style="font-weight:900;color:var(--gold-pure);margin-bottom:6px;white-space:nowrap;">~1 millió Ft</div><div class="chart-pillar" style="--target-h:96%;--bar-delay:1.05s;"></div><div class="stat-label" style="color:var(--gold-pure);">JÚNIUS</div></div>
+      </div>
+      <div class="bc-sm" style="text-align:center;margin-top:0.5rem;">Összes bevétel az indulás óta</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0.85rem;">
+    <div class="auto-anim from-right" style="--delay:0.3s;"><div class="visual-showcase float-3d">
+      <div class="visual-logo-stamp"><img src="public/assets/logo_circular.png" alt="TD-AI" /><span>1 MILLIÓ FT</span></div>
+      <img class="main-visual" src="public/assets/slide_1m_breakthrough_gold.jpg" onerror="this.onerror=null;this.src='public/assets/slide_night_hustle_gold.jpg'" alt="1 MILLIÓ FT" style="max-height:22cqh;" /></div></div>
+    <div class="card-3d auto-anim scale-slam" style="--delay:0.65s;text-align:center;border:2px solid var(--gold-pure);">
+      <div class="stat-mega" data-count="1000000" data-prefix="~" data-suffix=" Ft">~1.000.000 Ft</div>
+      <div class="bc-sm" style="color:var(--green-win);font-weight:800;margin-top:0.35rem;">✅ Csapat nélkül · ✅ Befektető nélkül · ✅ Munka mellett</div>
+    </div>
+    <p class="talk auto-anim" style="--delay:0.85s;">Nem lettem milliomos. Még a főállásom is megvan.<br />De már tudom: <b class="hy">ez az út járható</b>.</p>
+  </div></div>
+    </section>
+    <section class="slide" data-slide="10" data-chapter="10 · AMIT ELRONTOTTAM">
+  <div class="split-2"><div>
+    <div class="hormozi-badge auto-anim" style="--delay:0.05s;">⚠️ Hogy neked ne kelljen</div>
+    <h2 class="hormozi-h1 h-sm auto-anim" style="--delay:0.18s;"><span class="gold-marker" style="--delay:0.28s;">3 pofon,</span> amit én már megkaptam helyetted</h2>
+    <div class="stack">
+      <div class="card-3d big-card auto-anim" style="--delay:0.4s;border-left:5px solid var(--red-loss);"><div class="bc-ic">❌</div><div><div class="bc-big">Hetekig csiszolgattam volna a weboldalam.</div><div class="bc-sm"><b class="hg">Amit tanultam:</b> Indulj el félkészen. Az első ügyfelemnél alig volt kész bármi.</div></div></div>
+      <div class="card-3d big-card auto-anim" style="--delay:0.58s;border-left:5px solid var(--gold-pure);"><div class="bc-ic">❌</div><div><div class="bc-big">Este 9-kor hullafáradtan ültem le.</div><div class="bc-sm"><b class="hg">Amit tanultam:</b> Írd fel előre, mi a ma esti EGY feladat. Különben csak nézel ki a fejedből.</div></div></div>
+      <div class="card-3d big-card auto-anim" style="--delay:0.76s;border-left:5px solid var(--green-win);"><div class="bc-ic">❌</div><div><div class="bc-big">Féltem kimondani az árat.</div><div class="bc-sm"><b class="hg">Amit tanultam:</b> Legyen fix csomagod, fix árral. Nem kell mindenkit elvállalni.</div></div></div>
+    </div>
+  </div>
+  <div class="auto-anim from-right" style="--delay:0.35s;"><div class="visual-showcase float-3d">
+      <div class="visual-logo-stamp"><img src="public/assets/logo_circular.png" alt="TD-AI" /><span>A VALÓSÁG</span></div>
+      <img class="main-visual" src="public/assets/slide_night_work_1781860331040.png" onerror="this.onerror=null;this.src='public/assets/slide_night_hustle_gold.jpg'" alt="A VALÓSÁG" /><div class="visual-caption-bar"><span>🔥 Ezek nélkül ma nem tartanék itt</span><span></span></div></div></div>
+  </div>
+    </section>
+    <section class="slide" data-slide="11" data-chapter="11 · MOST TE JÖSSZ">
+  <div class="split-2"><div>
+    <div class="hormozi-badge auto-anim" style="--delay:0.05s;">🫵 Három kérdés neked</div>
+    <h2 class="hormozi-h1  auto-anim" style="--delay:0.18s;">Rólam ennyit.<br /><span class="gold-marker" style="--delay:0.28s;">És te?</span></h2>
+    <div class="stack">
+      <div class="card-3d q-card auto-anim" style="--delay:0.4s;"><span class="bc-ic">💭</span><span>Mi az, amit már <b class="hy">rég elkezdenél</b>, csak mindig holnapra tolod?</span></div>
+      <div class="card-3d q-card auto-anim" style="--delay:0.62s;"><span class="bc-ic">⏰</span><span>Hol van a napodban az a <b class="hy">2 óra</b>, amit erre szánhatnál?</span></div>
+      <div class="card-3d q-card auto-anim" style="--delay:0.84s;border-color:var(--gold-pure);"><span class="bc-ic">😬</span><span>Mitől félsz jobban: hogy <b class="hr">nem sikerül</b> — vagy hogy <b class="hy">meg sem próbálod</b>?</span></div>
+    </div>
+  </div>
+  <div class="auto-anim scale-slam" style="--delay:0.5s;">
+    <div class="card-3d float-3d" style="padding:2rem 1.6rem;text-align:center;border:2px solid var(--gold-pure);">
+      <img src="public/assets/logo_circular.png" alt="TD-AI" style="width:5cqw;height:5cqw;border-radius:50%;border:2px solid var(--gold-pure);margin-bottom:0.8rem;box-shadow:0 0 25px rgba(255,215,0,0.5);" />
+      <p class="quote">Nem az a kérdés, hogy <br />van-e rá időd.<br /><br />Hanem hogy mennyire <span class="hy" style="text-decoration:underline;">akarod</span>.</p>
+      <div class="bc-sm" style="margin-top:1rem;">Nekem sem volt. Csináltam rá.</div>
+    </div>
+  </div></div>
+    </section>
+    <section class="slide" data-slide="12" data-chapter="12 · BESZÉLGESSÜNK A KOMMENTEKBEN">
+  <div class="split-2"><div>
+    <div class="hormozi-badge auto-anim" style="--delay:0.05s;">💬 Minden kommentre én válaszolok</div>
+    <h2 class="hormozi-h1  auto-anim" style="--delay:0.18s;">Írd meg <span class="gold-marker" style="--delay:0.28s;">kommentben:</span></h2>
+    <div class="stack">
+      <div class="card-3d q-card auto-anim" style="--delay:0.35s;"><span class="bc-ic">1️⃣</span><span><b class="hy">Te mit építenél</b> a munkád mellett?</span></div>
+      <div class="card-3d q-card auto-anim" style="--delay:0.55s;"><span class="bc-ic">2️⃣</span><span>Mi tart vissza: az <b class="hy">idő</b>, a <b class="hy">pénz</b> vagy a <b class="hr">félelem</b>?</span></div>
+      <div class="card-3d q-card auto-anim" style="--delay:0.75s;border-color:var(--green-win);"><span class="bc-ic">3️⃣</span><span>Megmutassam lépésről lépésre, hogyan szerzek ügyfelet Facebook-hirdetéssel? Írd be: <b class="hg">KÉREM</b></span></div>
+    </div>
+  </div>
+  <div class="auto-anim scale-slam" style="--delay:0.45s;">
+    <div class="card-3d float-3d" style="text-align:center;padding:1.8rem 1.5rem;border:2px solid var(--gold-pure);">
+      <img src="public/assets/logo.png" onerror="this.onerror=null;this.src='public/assets/logo_circular.png'" alt="TD-AI" style="width:clamp(110px,13cqw,250px);height:clamp(110px,13cqw,250px);object-fit:cover;border-radius:18px;border:2px solid var(--gold-pure);box-shadow:0 0 35px rgba(255,215,0,0.45);margin-bottom:0.85rem;" />
+      <p class="quote" style="font-style:normal;">Köszönöm, hogy<br />velem tartottál. 🙏</p>
+      <div class="bc-sm" style="margin:0.6rem 0 1rem;">Ha adott valamit ez a videó, egy feliratkozással tudod megköszönni.<br />Nekem ez most rengeteget számít.</div>
+      <div class="sub-pill">▶ FELIRATKOZOM</div>
+    </div>
+  </div></div>
+    </section>
+  </main>
+</div>
+
+<!-- ================= LIVE WEBCAM PIP OVERLAY ================= -->
+<div class="webcam-pip" id="webcamPip" title="Húzd bárhova, vagy kattints duplán az élő kamerához!">
+  <video id="webcamVideo" autoplay playsinline muted style="display:none;"></video>
+  <div id="webcamPlaceholder" style="text-align:center; padding:1rem; font-size:0.72rem; color:var(--gold-pure); font-weight:800;">
+    🎥 KAMERA HELYE<br /><small style="opacity:0.8; font-weight:500;">(Dupla kattintás = Élő kamera)</small>
+  </div>
+</div>
+
+<!-- ================= AUTO-HIDING BOTTOM CONTROL BAR ================= -->
+<nav class="control-bar" id="controlBar">
+  <button class="ctrl-btn" onclick="prevSlide()" title="Előző dia (Balra nyíl)">◀ Előző</button>
+  <div id="slideDotsNav" style="display:flex; gap:6px; align-items:center; margin:0 6px;"></div>
+  <button class="ctrl-btn" onclick="nextSlide()" title="Következő dia — minden elem automatikusan animálva érkezik! (Jobbra nyíl / Space)">▶ Következő Dia</button>
+  <button class="ctrl-btn" onclick="replayCurrentSlideAnimations()" title="Animációk újrajátszása ezen a dián (R gomb)">🔄 Animáció Újra (R)</button>
+  <button class="ctrl-btn" onclick="openDetachedPrompter()" title="Súgó megnyitása KÜLÖN ABLAKBAN (így OBS Ablak-felvételnél vagy 2. monitoron NEM látszik a videón! — P gomb)">📱 Súgó Külön Ablakban (P)</button>
+  <button class="ctrl-btn" id="btnLaser" onclick="toggleLaser()" title="Arany lézerpointer (L gomb)">✨ Lézer (L)</button>
+  <button class="ctrl-btn" id="btnWebcam" onclick="toggleWebcamPip()" title="Webkamera kör keret (K gomb)">🎥 Kamera (K)</button>
+  <button class="ctrl-btn" onclick="toggleCleanObsMode()" title="Vezérlősáv végleges elrejtése (H gomb)">🎬 Tiszta Képernyő (H)</button>
+  <button class="ctrl-btn" onclick="toggleFullscreen()" title="Teljes képernyő (F gomb)">🖥️ Fullscreen (F)</button>
+</nav>
+
+<script>
+  /* =========================================================================
+     1. ELŐADÓI SÚGÓ SZÖVEGEK (KÜLÖN ABLAKBAN SZINKRONIZÁLVA!)
+     ========================================================================= */
+  const SPEAKER_NOTES = {
+    "1": "Szia! Ebben a videóban elmesélem, hogyan építettem fel egy AI marketing ügynökséget úgy, hogy közben napi 8–10 órát dolgozom máshol. Nem vagyok guru, a kamera előtt is kezdő vagyok. De minden szám, amit mutatok, valódi: mennyi pénzből indultam, honnan jött az első ügyfelem, és hogyan lett belőle nagyjából 1 millió forint bevétel.",
+    "2": "Pár szó rólam: Dani vagyok, 26 éves, Debrecenből. 9 éve dolgozom főállásban, ugyanúgy bejárok, mint te. Nem mondtam fel. A fizetésem fizette a számláimat, így nem kellett kapkodnom és nem kellett hitel. 2026 márciusában mondtam azt, hogy elég a tervezgetésből, belevágok.",
+    "3": "Sokan azt hiszik, ehhez milliók kellenek. Nekem egy laptopom volt, ami amúgy is megvolt. Domain, tárhely, e-mail, AI eszközök: összesen kb. 25 ezer forint havonta. Ennyi volt a teljes kockázatom. Az első ügyfelem fél évnyi költséget kifizetett.",
+    "4": "Mit csinálok pontosan? Nem posztokat gyártok. Egy szerelőnek vagy egy fodrásznak nem lájk kell, hanem hogy csörögjön a telefon. Hirdetés, weboldal, chatbot, automatizálás – egy kézben.",
+    "5": "Az első ügyfelem egy Facebook-csoportból jött. Valaki weboldalast keresett, harmincan beírták, hogy „írj rám”. Én leírtam neki konkrétan, mit csinálnék a helyében. Alig volt kész bármim, mégis aláírtuk. Az első három hétben kb. 150 ezer forint jött be. Nem sok, de akkor hittem el, hogy ez működhet. És a mai napig velem dolgozik.",
+    "6": "Utána indítottam egy Facebook-hirdetést egy egyszerű űrlappal. Egy hét alatt 6–7 cégvezető töltötte ki. Én közben dolgoztam, a hirdetés pedig gyűjtötte az érdeklődőket. Délután 5 után visszahívtam őket, és ebből lettek az újabb szerződések.",
+    "7": "Nem fogok hazudni: kemény volt. Nappal munkahely, este 6-tól sokszor éjfélig a saját cégem. 5–6 óra alvás. Volt, hogy este 9-kor csak bámultam a képernyőt. Megérte? Igen. De nem volt könnyű, és nem is akarom úgy eladni, mintha az lett volna.",
+    "8": "Hogy bírom egyedül? Úgy, hogy nem egyedül dolgozom. Az AI nem gondolkodik helyettem, de amit kitaláltam, azt sokkal gyorsabban megcsinálja. Egy weboldal régen 3–4 hét volt, ma 2–3 este. Egy kampány előkészítése 2–3 nap helyett 45 perc.",
+    "9": "A számok szépítés nélkül: márciusban 150 ezer, júniusra összesen kb. 1 millió forint bevétel. Csapat nélkül, befektető nélkül, munka mellett. Nem lettem milliomos, a főállásom is megvan még. De már tudom, hogy ez az út járható.",
+    "10": "Három pofon, amit én már megkaptam helyetted. Egy: hetekig csiszolgattam volna a weboldalam – indulj el félkészen. Kettő: este hullafáradtan ültem le – írd fel előre, mi a ma esti egy feladat. Három: féltem kimondani az árat – legyen fix csomagod, fix árral.",
+    "11": "Rólam ennyit. És te? Mi az, amit már rég elkezdenél, csak mindig holnapra tolod? Hol van a napodban az a 2 óra? És mitől félsz jobban: hogy nem sikerül, vagy hogy meg sem próbálod? (Tarts 2 másodperc szünetet mindegyik után.)",
+    "12": "Írd meg kommentben: te mit építenél a munkád mellett? És mi tart vissza – az idő, a pénz vagy a félelem? Minden kommentre én válaszolok. Ha szeretnéd, hogy megmutassam lépésről lépésre a Facebook-hirdetést, írd be: KÉREM. Köszönöm, hogy velem tartottál – ha adott valamit, iratkozz fel."
+};
+
+  /* =========================================================================
+     2. AUTOMATIC CASCADE SLIDE ENGINE (1 GOMB = TELJES ANIMÁLT DIA!)
+     ========================================================================= */
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const totalSlides = slides.length;
+  let currentSlideIdx = 0;
+  let detachedPrompterWin = null;
+
+  const slideDotsNav = document.getElementById('slideDotsNav');
+  slides.forEach((_, idx) => {
+    const dot = document.createElement('button');
+    dot.title = `${idx + 1}. dia`;
+    dot.style.cssText = 'width:9px;height:9px;border-radius:50%;border:none;padding:0;cursor:pointer;background:rgba(245,208,97,0.28);transition:all 0.25s ease;';
+    dot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      goToSlide(idx);
+    });
+    slideDotsNav.appendChild(dot);
+  });
+
+  function goToSlide(index) {
+    if (index < 0 || index >= totalSlides) return;
+
+    // Remove active from all slides first so re-adding triggers all CSS transitions automatically
+    slides.forEach(s => s.classList.remove('active'));
+    currentSlideIdx = index;
+
+    const targetSlide = slides[currentSlideIdx];
+    // Force reflow so staggered animations always play fresh
+    void targetSlide.offsetWidth;
+    targetSlide.classList.add('active'); fitAll();
+
+    updateTopAndBottomUI();
+    animateCountersOnSlide(targetSlide);
+    updateThreeSceneForSlide(currentSlideIdx + 1);
+    syncDetachedPrompter();
+  }
+
+  function nextSlide() {
+    if (currentSlideIdx < totalSlides - 1) {
+      goToSlide(currentSlideIdx + 1);
+    }
+  }
+
+  function prevSlide() {
+    if (currentSlideIdx > 0) {
+      goToSlide(currentSlideIdx - 1);
+    }
+  }
+
+  function replayCurrentSlideAnimations() {
+    const activeSlide = slides[currentSlideIdx];
+    activeSlide.classList.remove('active');
+    void activeSlide.offsetWidth;
+    setTimeout(() => {
+      activeSlide.classList.add('active'); fitAll();
+      animateCountersOnSlide(activeSlide);
+    }, 60);
+  }
+
+  function updateTopAndBottomUI() {
+    const activeSlide = slides[currentSlideIdx];
+    document.getElementById('slideCounterBadge').textContent =
+      String(currentSlideIdx + 1).padStart(2, '0') + ' / ' + String(totalSlides).padStart(2, '0');
+    document.getElementById('chapterTitle').textContent = activeSlide.dataset.chapter || '';
+
+    Array.from(slideDotsNav.children).forEach((d, idx) => {
+      if (idx === currentSlideIdx) {
+        d.style.background = '#ffd700';
+        d.style.transform = 'scale(1.5)';
+        d.style.boxShadow = '0 0 10px #ffd700';
+      } else {
+        d.style.background = 'rgba(245,208,97,0.28)';
+        d.style.transform = 'scale(1)';
+        d.style.boxShadow = 'none';
+      }
+    });
+  }
+
+  /* =========================================================================
+     3. DETACHED SPEAKER NOTES WINDOW (NEM LÁTSZIK A FELVÉTELEN!)
+     ========================================================================= */
+  function openDetachedPrompter() {
+    if (detachedPrompterWin && !detachedPrompterWin.closed) {
+      detachedPrompterWin.focus();
+      syncDetachedPrompter();
+      return;
+    }
+    detachedPrompterWin = window.open('', 'TDAIPrompterWindow', 'width=540,height=460,menubar=no,toolbar=no,location=no,status=no');
+    if (!detachedPrompterWin) {
+      alert('Engedélyezd a felugró ablakot a külön ablakos súgóhoz!');
+      return;
+    }
+    detachedPrompterWin.document.write(`
+      <!DOCTYPE html>
+      <html lang="hu">
+      <head>
+        <meta charset="utf-8">
+        <title>🎙️ TD-AI Előadói Súgó (Felvételen Kívüli Ablak)</title>
+        <style>
+          body { background:#080705; color:#fff; font-family:system-ui,sans-serif; padding:20px; margin:0; display:flex; flex-direction:column; height:100cqh; box-sizing:border-box; border:2px solid #ffd700; }
+          .head { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,215,0,0.3); padding-bottom:10px; margin-bottom:14px; }
+          .badge { background:#ffd700; color:#000; font-weight:900; padding:4px 12px; border-radius:99px; font-size:14px; }
+          .chapter { color:#f5d061; font-weight:700; font-size:13px; text-transform:uppercase; }
+          .script-box { flex:1; font-size:21px; line-height:1.55; color:#f8f4ea; background:rgba(255,215,0,0.06); border:1px solid rgba(255,215,0,0.25); border-radius:12px; padding:18px; overflow-y:auto; }
+          .controls { display:flex; gap:10px; margin-top:14px; }
+          button { flex:1; padding:12px; border-radius:8px; border:1px solid #ffd700; background:#1c170d; color:#ffd700; font-weight:800; font-size:15px; cursor:pointer; }
+          button.primary { background:#ffd700; color:#000; }
+          .tip { font-size:12px; color:#999; margin-top:8px; text-align:center; }
+        </style>
+      </head>
+      <body>
+        <div class="head">
+          <span class="badge" id="pSlideNum">01 / 12</span>
+          <span class="chapter" id="pChapter">Fejezet</span>
+        </div>
+        <div class="script-box" id="pText">...</div>
+        <div class="controls">
+          <button onclick="window.opener.prevSlide()">◀ Előző Dia</button>
+          <button class="primary" onclick="window.opener.nextSlide()">▶ Következő Dia (Space)</button>
+        </div>
+        <div class="tip">💡 Tipp: Húzd ezt az ablakot 2. monitorra, vagy OBS-ben válaszd az „Ablak rögzítése” módot a fő prezentációs ablakra, így ez a súgó 100%-ban láthatatlan marad a videón!</div>
+      </body>
+      </html>
+    `);
+    detachedPrompterWin.document.close();
+    syncDetachedPrompter();
+  }
+
+  function syncDetachedPrompter() {
+    if (!detachedPrompterWin || detachedPrompterWin.closed) return;
+    const activeSlide = slides[currentSlideIdx];
+    const numEl = detachedPrompterWin.document.getElementById('pSlideNum');
+    const chapEl = detachedPrompterWin.document.getElementById('pChapter');
+    const txtEl = detachedPrompterWin.document.getElementById('pText');
+    if (numEl) numEl.textContent = `${String(currentSlideIdx + 1).padStart(2, '0')} / ${totalSlides}`;
+    if (chapEl) chapEl.textContent = activeSlide.dataset.chapter || '';
+    if (txtEl) txtEl.textContent = SPEAKER_NOTES[currentSlideIdx + 1] || '';
+  }
+
+  /* =========================================================================
+     4. ANIMATED NUMBER COUNTERS
+     ========================================================================= */
+  function animateCountersOnSlide(container) {
+    const counters = container.querySelectorAll('[data-count]');
+    counters.forEach(el => {
+      const target = parseInt(el.getAttribute('data-count'), 10);
+      const prefix = el.getAttribute('data-prefix') || '';
+      const suffix = el.getAttribute('data-suffix') || '';
+      if (isNaN(target)) return;
+
+      const duration = 1200;
+      const startTime = performance.now();
+
+      function tick(now) {
+        const elapsed = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - elapsed, 3);
+        const val = Math.round(target * eased);
+        el.textContent = prefix + val.toLocaleString('hu-HU').replace(/\s/g, '.') + suffix;
+        if (elapsed < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
+  /* =========================================================================
+     5. AUTO-HIDE BOTTOM BAR FOR CLEAN MONITOR RECORDING
+     ========================================================================= */
+  let hideBarTimeout = null;
+  const controlBar = document.getElementById('controlBar');
+
+  function scheduleBarHide() {
+    clearTimeout(hideBarTimeout);
+    controlBar.classList.remove('auto-hidden');
+    hideBarTimeout = setTimeout(() => {
+      controlBar.classList.add('auto-hidden');
+    }, 2800);
+  }
+
+  window.addEventListener('mousemove', e => {
+    // Show control bar when mouse moves near bottom 15% of screen or anywhere briefly
+    if (e.clientY > window.innerHeight * 0.82) {
+      clearTimeout(hideBarTimeout);
+      controlBar.classList.remove('auto-hidden');
+    } else {
+      scheduleBarHide();
+    }
+  });
+  scheduleBarHide();
+
+  /* =========================================================================
+     6. 3D CARD HOVER TILT & LASER POINTER & WEBCAM PIP
+     ========================================================================= */
+  document.querySelectorAll('.card-3d').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const normX = ((e.clientX - rect.left) / rect.width) - 0.5;
+      const normY = ((e.clientY - rect.top) / rect.height) - 0.5;
+      card.style.transform = `perspective(1000px) rotateY(${normX * 9}deg) rotateX(${-normY * 9}deg) translateZ(8px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+
+  const laserDot = document.getElementById('laser-dot');
+  window.addEventListener('mousemove', e => {
+    laserDot.style.left = e.clientX + 'px';
+    laserDot.style.top = e.clientY + 'px';
+  });
+
+  function toggleLaser() {
+    document.body.classList.toggle('laser-active');
+    document.getElementById('btnLaser').classList.toggle('active');
+  }
+
+  let webcamStream = null;
+  function toggleWebcamPip() {
+    document.getElementById('webcamPip').classList.toggle('open');
+    document.getElementById('btnWebcam').classList.toggle('active');
+  }
+
+  document.getElementById('webcamPip').addEventListener('dblclick', async () => {
+    const videoEl = document.getElementById('webcamVideo');
+    const placeholder = document.getElementById('webcamPlaceholder');
+    if (!webcamStream) {
+      try {
+        webcamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        videoEl.srcObject = webcamStream;
+        videoEl.style.display = 'block';
+        placeholder.style.display = 'none';
+      } catch (err) {
+        placeholder.innerHTML = '🎥 OBS Kamera Keret<br><small>(Mozgasd bárhova)</small>';
+      }
+    }
+  });
+
+  (function makePipDraggable() {
+    const pip = document.getElementById('webcamPip');
+    let dragging = false, startX = 0, startY = 0, initLeft = 0, initTop = 0;
+    pip.addEventListener('mousedown', e => {
+      dragging = true;
+      const rect = pip.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY;
+      initLeft = rect.left; initTop = rect.top;
+      pip.style.right = 'auto'; pip.style.bottom = 'auto';
+      pip.style.left = initLeft + 'px'; pip.style.top = initTop + 'px';
+    });
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      pip.style.left = (initLeft + e.clientX - startX) + 'px';
+      pip.style.top = (initTop + e.clientY - startY) + 'px';
+    });
+    window.addEventListener('mouseup', () => { dragging = false; });
+  })();
+
+  function toggleCleanObsMode() {
+    document.body.classList.toggle('clean-obs-mode');
+  }
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+
+  /* =========================================================================
+     7. KEYBOARD & CLICK NAVIGATION
+     ========================================================================= */
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+      e.preventDefault();
+      nextSlide();
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault();
+      prevSlide();
+    } else if (e.key.toLowerCase() === 'r') {
+      replayCurrentSlideAnimations();
+    } else if (e.key.toLowerCase() === 'p') {
+      openDetachedPrompter();
+    } else if (e.key.toLowerCase() === 'l') {
+      toggleLaser();
+    } else if (e.key.toLowerCase() === 'k') {
+      toggleWebcamPip();
+    } else if (e.key.toLowerCase() === 'h') {
+      toggleCleanObsMode();
+    } else if (e.key.toLowerCase() === 'f') {
+      toggleFullscreen();
+    } else if (e.key >= '1' && e.key <= '9') {
+      goToSlide(parseInt(e.key, 10) - 1);
+    } else if (e.key === '0') {
+      goToSlide(9);
+    }
+  });
+
+  document.getElementById('slidesStage').addEventListener('click', e => {
+    if (!e.target.closest('button') && !e.target.closest('a')) {
+      nextSlide();
+    }
+  });
+
+  /* =========================================================================
+     8. THREE.JS GOLD & OBSIDIAN 3D SCENE
+     ========================================================================= */
+  let scene, camera, renderer, mainGroup, coreMesh, ring1, ring2, particlesMesh;
+  let targetCamZ = 14.5, targetCamX = 4.0, targetCamY = 0.2;
+  let mouseNormX = 0, mouseNormY = 0;
+
+  function initThreeJS() {
+    const canvas = document.getElementById('webgl-canvas');
+    if (typeof THREE === 'undefined') return;
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(55, 16 / 9, 0.1, 1000);
+    camera.position.set(4.0, 0.2, 14.5);
+
+    renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    mainGroup = new THREE.Group();
+    scene.add(mainGroup);
+
+    // 1. Metallic Gold Wireframe Polyhedron
+    const icoGeo = new THREE.IcosahedronGeometry(3.5, 1);
+    const icoMat = new THREE.MeshBasicMaterial({
+      color: 0xffd700,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.2
+    });
+    coreMesh = new THREE.Mesh(icoGeo, icoMat);
+    mainGroup.add(coreMesh);
+
+    // 2. Outer Gold Ring
+    const torusGeo1 = new THREE.TorusGeometry(5.3, 0.04, 16, 120);
+    const torusMat1 = new THREE.MeshBasicMaterial({
+      color: 0xf5d061,
+      transparent: true,
+      opacity: 0.35
+    });
+    ring1 = new THREE.Mesh(torusGeo1, torusMat1);
+    ring1.rotation.x = Math.PI / 2.5;
+    mainGroup.add(ring1);
+
+    // 3. Second Orbiting Gold Ring
+    const torusGeo2 = new THREE.TorusGeometry(6.8, 0.025, 16, 120);
+    const torusMat2 = new THREE.MeshBasicMaterial({
+      color: 0xc5a059,
+      transparent: true,
+      opacity: 0.22
+    });
+    ring2 = new THREE.Mesh(torusGeo2, torusMat2);
+    ring2.rotation.y = Math.PI / 3;
+    mainGroup.add(ring2);
+
+    // 4. Floating Gold Dust Particles
+    const particleCount = 700;
+    const posArray = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i++) {
+      posArray[i] = (Math.random() - 0.5) * 40;
+    }
+    const partGeo = new THREE.BufferGeometry();
+    partGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    const partMat = new THREE.PointsMaterial({
+      size: 0.08,
+      color: 0xffd700,
+      transparent: true,
+      opacity: 0.6
+    });
+    particlesMesh = new THREE.Points(partGeo, partMat);
+    scene.add(particlesMesh);
+
+    window.addEventListener('mousemove', e => {
+      mouseNormX = (e.clientX / window.innerWidth) - 0.5;
+      mouseNormY = (e.clientY / window.innerHeight) - 0.5;
+    });
+
+    window.addEventListener('resize', () => {
+      if (!renderer) return;
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      coreMesh.rotation.y += 0.0045;
+      coreMesh.rotation.x += 0.0025;
+      ring1.rotation.z -= 0.0035;
+      ring2.rotation.x += 0.003;
+      particlesMesh.rotation.y += 0.0009;
+
+      camera.position.x += ((targetCamX + mouseNormX * 1.6) - camera.position.x) * 0.05;
+      camera.position.y += ((targetCamY - mouseNormY * 1.1) - camera.position.y) * 0.05;
+      camera.position.z += (targetCamZ - camera.position.z) * 0.05;
+      camera.lookAt(scene.position);
+
+      renderer.render(scene, camera);
+    }
+    animate();
+  }
+
+  function updateThreeSceneForSlide(slideNum) {
+    if (!mainGroup) return;
+    const positions = {
+      1:  { x: 4.2,  y: 0.2,  z: 14.2, scale: 1.05 },
+      2:  { x: -4.2, y: 0.4,  z: 13.5, scale: 0.95 },
+      3:  { x: 4.0,  y: -0.5, z: 14.8, scale: 1.1  },
+      4:  { x: -3.8, y: 0.0,  z: 14.0, scale: 1.05 },
+      5:  { x: 4.4,  y: 0.4,  z: 13.0, scale: 1.2  },
+      6:  { x: 0.0,  y: 0.8,  z: 15.8, scale: 1.15 },
+      7:  { x: 3.8,  y: -0.4, z: 14.2, scale: 1.0  },
+      8:  { x: -4.0, y: 0.3,  z: 13.2, scale: 1.25 },
+      9:  { x: 3.8,  y: 0.6,  z: 12.6, scale: 1.35 },
+      10: { x: 4.0,  y: 0.0,  z: 15.0, scale: 0.95 },
+      11: { x: 4.2,  y: 0.2,  z: 13.5, scale: 1.15 },
+      12: { x: 0.0,  y: 0.0,  z: 12.0, scale: 1.4  }
+    };
+    const cfg = positions[slideNum] || positions[1];
+    targetCamX = cfg.x;
+    targetCamY = cfg.y;
+    targetCamZ = cfg.z;
+    mainGroup.scale.setScalar(cfg.scale);
+  }
+
+  initThreeJS();
+  goToSlide(0);
+
+  /* V2 FIT: a betűméret a vászon szélességéhez igazodik, a túl magas dia automatikusan összehúzódik */
+  function fitRootFont(){
+    const deck = document.getElementById('deckViewport');
+    document.documentElement.style.fontSize = (deck.clientWidth / 1600 * 16) + 'px';
+  }
+  function fitActiveSlide(){
+    const s = document.querySelector('.slide.active'); if(!s) return;
+    const inner = s.firstElementChild; if(!inner) return;
+    inner.style.transform = '';
+    const cs = getComputedStyle(s);
+    const availH = s.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const availW = s.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const k = Math.min(1, availH / inner.scrollHeight, availW / inner.scrollWidth);
+    if (k < 0.995) inner.style.transform = 'scale(' + (k * 0.985).toFixed(3) + ')';
+  }
+  function fitAll(){ fitRootFont(); fitActiveSlide(); }
+  window.addEventListener('resize', fitAll);
+  document.addEventListener('fullscreenchange', () => setTimeout(fitAll, 120));
+  window.addEventListener('load', fitAll);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+  fitRootFont();
+</script>
+</body>
+</html>
